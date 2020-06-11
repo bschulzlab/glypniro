@@ -46,6 +46,20 @@ job = [
     }
 ]
 
+job_N = [
+    {
+        "filename": r"C:\Users\localadmin\PycharmProjects\glypnirO\data\Nlink_Ragged_10_20ppm_TN_CSF_062617_02_H_R1.raw_Byonic.xlsx",
+        "area_filename": r"C:\Users\localadmin\PycharmProjects\glypnirO\data\TN_CSF_062617_02_MSnSpectrumInfo.txt",
+        "replicate_id": r"R1",
+        "condition_id": r"H"
+    },
+    {
+        "filename": r"C:\Users\localadmin\PycharmProjects\glypnirO\data\Nlink_Ragged_10_20ppm_TN_CSF_062617_03_A_R1.raw_Byonic.xlsx",
+        "area_filename": r"C:\Users\localadmin\PycharmProjects\glypnirO\data\TN_CSF_062617_03_MSnSpectrumInfo.txt",
+        "replicate_id": r"R1",
+        "condition_id": r"A"
+    }
+]
 
 class CommonTest(unittest.TestCase):
     def test_load_fasta(self):
@@ -83,9 +97,20 @@ class GlynirOCase(unittest.TestCase):
         a = GlypnirO(fasta_file)
         a.add_batch_component(job, 0)
         a.process_components("[S|T]", "O-glycan")
-        result = a.analyze_components()
+        result = a.analyze_components("O-glycan")
         with pd.ExcelWriter("test_analyze.xlsx") as writer:
             result.to_excel(writer)
+
+
+class GlynirNCase(unittest.TestCase):
+    def test_analyze(self):
+        a = GlypnirO(fasta_file)
+        a.add_batch_component(job_N, 0)
+        a.process_components("(?=(N[^PX][ST]))", "N-glycan")
+        result = a.analyze_components("N-glycan")
+        with pd.ExcelWriter("test_analyze_N.xlsx") as writer:
+            result.to_excel(writer)
+
 
 if __name__ == '__main__':
     unittest.main()
