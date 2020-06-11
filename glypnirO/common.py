@@ -584,13 +584,13 @@ class GlypnirO:
     def add_component(self, filename, area_filename, replicate_id, sample_id):
         component = GlypnirOComponent(filename, area_filename, replicate_id, sample_id)
 
-    def add_batch_component(self, component_list, minimum_score, protein=None, combine_uniprot_isoform=True, trust_byonic=False, legacy=False):
+    def add_batch_component(self, component_list, minimum_score, protein=None, combine_uniprot_isoform=True, legacy=False):
         self.load_dataframe(component_list)
         protein_list = []
         if protein is not None:
             self.components["Protein"] = pd.Series([protein]*len(self.components.index), index=self.components.index)
             for i, r in self.components.iterrows():
-                comp = GlypnirOComponent(r["filename"], r["area_filename"], r["replicate_id"], condition_id=r["condition_id"], protein_name=protein, minimum_score=minimum_score, trust_byonic=trust_byonic, legacy=legacy)
+                comp = GlypnirOComponent(r["filename"], r["area_filename"], r["replicate_id"], condition_id=r["condition_id"], protein_name=protein, minimum_score=minimum_score, trust_byonic=self.trust_byonic, legacy=legacy)
                 self.components.at[i, "component"] = comp
                 print("{} - {}, {} peptides has been successfully loaded".format(r["condition_id"], r["replicate_id"], str(len(comp.data.index))))
 
@@ -631,7 +631,7 @@ class GlypnirO:
                     if not u.startswith(">Reverse") and not u.endswith("(Common contaminant protein)"):
                         comp = GlypnirOComponent(g, file_with_area, r["replicate_id"],
                                                  condition_id=r["condition_id"], protein_name=u,
-                                                 minimum_score=minimum_score, trust_byonic=trust_byonic, legacy=legacy)
+                                                 minimum_score=minimum_score, trust_byonic=self.trust_byonic, legacy=legacy)
                         if not comp.empty:
                             components.append({"filename": r["filename"], "area_filename": r["area_filename"], "condition_id": r["condition_id"], "replicate_id": r["replicate_id"], "Protein": u, "component": comp})
                 yield i, r
@@ -661,7 +661,7 @@ class GlypnirO:
         else:
             raise ValueError("Input have to be list, pandas dataframe, or csv, xlsx, or tabulated txt filepath.")
 
-    def process_components(self, motif):
+    def process_components(self):
         for i, r in self.components.iterrows():
             # print("Processing {} - {} {} for {}".format(r["condition_id"], r["replicate_id"], r["Protein"], analysis))
             r["component"].process()
