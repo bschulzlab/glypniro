@@ -48,6 +48,14 @@ The rows within the input file should not have to follow any particular order ho
 - `filename` filepath to the Byonic .xlsx output file of the experiment.
 - `area_filename` filepath to the PD tabulated output file of the experiment.
 
+# Output
+
+The output of the script is a single .xlsx file with 4 sheets. 
+- The first one is the output where we calculate the proportion by combining both the glycosylated and unglycosylated glycoform data.
+- The second one is the output where the proportion of glycosylated was calculated without the unglycosylated data while the unglycosylated data was calculated similar to the first sheet.
+- The third one is the only the filter of the glycosylated output from the second sheet.
+- The forth one is the filter for only of the unglycosylated output from the first sheet.
+
 # Example
 
 `python main.py -i test_experiment.xlsx -o test_output.xlsx -t -g`
