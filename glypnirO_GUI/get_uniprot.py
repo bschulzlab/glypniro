@@ -1,11 +1,20 @@
 import requests
 import re
 
+
+# regex pattern for matching UniProt accession that can be used with the search object groupdict method to retrieve accession and isotype information separately
 acc_regex = re.compile("(?P<accession>[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})(?P<isotype>-\d)?")
 
-
+# sequence object for storing and presenting uniprot id.
 class UniprotSequence:
     def __init__(self, acc, parse_acc=False):
+        """
+
+        :type parse_acc: bool
+        whether or not for the script to parse the accession id from the input
+        :type acc: str
+        a string containing the Uniprot accession ID of the sequence
+        """
         self.raw_acc = acc
         self.accession = None
         self.isotype = None
@@ -22,13 +31,27 @@ class UniprotSequence:
         return self.accession + self.isotype
 
 
+# The main operating object for parsing Uniprot ID from the output.
+# UniprotParser work by accessing the Uniprot database online api at the base url https://www.uniprot.org/uploadlists/
+# The parser divide the input list of accession ids into several smaller lists of max 300 accession ids.
 class UniprotParser:
     base_url = "https://www.uniprot.org/uploadlists/"
-    headers = {
-        "User-Agent": "Python, toan.phung@uq.net.au"
-    }
 
-    def __init__(self, acc_list, unique=False):
+    def __init__(self, acc_list, unique=False, headers=None):
+        """
+
+
+        :type headers: dict
+        headers dictionary
+        :type unique: bool
+        specify whether the list is unique
+        :type acc_list: list
+        list of UniProt accession id
+        """
+        if not headers:
+            self.headers = {"User-Agent": "Python, GlypnirO"}
+        else:
+            self.headers = headers
         self.acc_list = acc_list
         if not unique:
             self.acc_list = list(set(i for i in self.acc_list))
@@ -36,6 +59,16 @@ class UniprotParser:
 
     @staticmethod
     def create_params(acc_list, format="tab", include_isoform=True):
+        """
+
+        :type acc_list: list
+        list of accession ids
+        :type include_isoform: bool
+        whether to include isoform or not. Only important in fasta output.
+        :type format: str
+        the format of the output file
+
+        """
         query = ""
         for a in acc_list:
             query += str(a) + " "

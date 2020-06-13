@@ -8,6 +8,7 @@ from glypnirO_GUI.get_uniprot import UniprotParser
 from sequal.sequence import Sequence
 from sequal.resources import glycan_block_dict
 
+# Defining important colume names within the dataset
 sequence_column_name = "Peptide\n< ProteinMetrics Confidential >"
 glycans_column_name = "Glycans\nNHFAGNa"
 starting_position_column_name = "Starting\nposition"
@@ -17,6 +18,7 @@ protein_column_name = "Protein Name"
 rt = "Scan Time"
 selected_aa = {"N", "S", "T"}
 
+# Defining important regular expression pattern to parse the dataset
 regex_glycan_number_pattern = "\d+"
 glycan_number_regex = re.compile(regex_glycan_number_pattern)
 regex_pattern = "\.[\[\]\w\.\+\-]*\."
@@ -25,6 +27,7 @@ uniprot_regex = re.compile("(?P<accession>[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-
 glycan_regex = re.compile("(\w+)\((\d+)\)")
 
 
+# Function to filter for only PSM collections that do not only containing unglycosylated peptides
 def filter_U_only(df):
     unique_glycan = df["Glycans"].unique()
     if len(unique_glycan) > 1 or True not in np.isin(unique_glycan, "U"):
@@ -32,7 +35,7 @@ def filter_U_only(df):
         return True
     return False
 
-
+# Filter for only PSMs that are unglycosylated within PSM collections that do not only containing unglycosylated peptides
 def filter_with_U(df):
     unique_glycan = df["Glycans"].unique()
     if len(unique_glycan) > 1 \
@@ -41,6 +44,7 @@ def filter_with_U(df):
         return True
     return False
 
+# parse modification mass and convert it from string to float
 def get_mod_value(amino_acid):
     if amino_acid.mods:
         if amino_acid.mods[0].value.startswith("+"):
@@ -50,7 +54,7 @@ def get_mod_value(amino_acid):
     else:
         return 0
 
-
+# load fasta file into a dictionary
 def load_fasta(fasta_file_path, selected=None, selected_prefix=""):
     with open(fasta_file_path, "rt") as fasta_file:
         result = {}
@@ -70,13 +74,19 @@ def load_fasta(fasta_file_path, selected=None, selected_prefix=""):
                 result[current_seq] += line
         return result
 
-
+# Storing analysis result for each protein
 class Result:
     def __init__(self, df):
         self.df = df
         self.empty = df.empty
 
     def calculate_proportion(self, occupancy=True):
+        """
+        calculate proportion of each glycoform from the dataset
+        :type occupancy: bool
+        whether or not to calculate the proportion as occupancy which would includes unglycosylated form.
+
+        """
         df = self.df.copy()
         #print(df)
         if not occupancy:
@@ -95,6 +105,15 @@ class Result:
         return df
 
     def to_summary(self, df=None, name="", trust_byonic=False, occupancy=True):
+        """
+
+        :type trust_byonic: bool
+        whether or not to calculate calculate raw values for each individual position assigned by byonic
+        :type occupancy: bool
+        whether or not to calculate the proportion as occupancy which would includes unglycosylated form.
+        :type df: pd.DataFrame
+
+        """
         if df is None:
             df = self.df
         if not occupancy:
@@ -109,7 +128,7 @@ class Result:
         temp.rename(columns={"Value": name}, inplace=True)
         return temp
 
-
+# Object containing each individual protein
 class GlypnirOComponent:
     def __init__(self, filename, area_filename, replicate_id, condition_id, protein_name, minimum_score=0, trust_byonic=False, legacy=False):
         if type(filename) == pd.DataFrame:
