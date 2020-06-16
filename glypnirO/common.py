@@ -188,20 +188,7 @@ class GlypnirOComponent:
 
     # process the protein data
     def process(self):
-        # entries_number = len(self.data.index)
-        # if analysis == "N-glycan":
-        #     expand_window = 2
-        #     self.data["total_number_of_asn"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["total_number_of_n-linked_sequon"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["total_number_of_hexnac"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["total_number_of_deamidation"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["total_number_of_modded_asn"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["total_number_of_unmodded_asn"] = pd.Series([0] * entries_number, index=self.data.index, dtype=int)
-        # elif analysis == "O-glycan":
-        #     self.data["total_number_of_hex"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["total_number_of_modded_ser_thr"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["total_number_of_unmodded_ser_or_thr"] = pd.Series([0]*entries_number, index=self.data.index, dtype=int)
-        #     self.data["o_glycosylation_status"] = pd.Series([False]*entries_number, index=self.data.index, dtype=bool)
+
         for i, r in self.data.iterrows():
             glycan_dict = {}
             search = sequence_regex.search(r[sequence_column_name])
@@ -209,39 +196,7 @@ class GlypnirOComponent:
             seq = Sequence(search.group(0))
             # get unformated string from the Sequence object. This unformatted string contain a "." at both end
             stripped_seq = seq.to_stripped_string()
-            # modifications = {}
-            # if pd.notnull(r[modifications_column_name]):
-            #
-            #     for mod in r[modifications_column_name].split(","):
-            #         number = 1
-            #         if "*" in mod:
-            #             m = mod.split("*")
-            #             minimod = Sequence(m[0].strip())
-            #             number = int(m[1].strip())
-            #
-            #         else:
-            #             minimod = Sequence(mod.strip())
-            #         for mo in minimod[0].mods:
-            #             if mo.value not in modifications:
-            #                 modifications[mo.value] = {}
-            #             modifications[mo.value][minimod[0].value] = {"mod": deepcopy(mo),
-            #                                                                      "number": number}
-            #         #if minimod[0].mods[0].value not in modifications:
-            #         #    modifications[minimod[0].mods[0].value] = {}
-            #         #modifications[minimod[0].mods[0].value][minimod[0].value] = {"mod": deepcopy(minimod[0].mods[0]),
-            #         #                                                             "number": number}
-            #
-            #         if minimod[0].value == "N":
-            #             if analysis == "N-glycan":
-            #                 for mo in minimod[0].mods:
-            #                     if mo.value == 1:
-            #                         #if minimod[0].mods[0].value == 1:
-            #                         self.data.at[i, "total_number_of_deamidation"] += number
-            #                     self.data.at[i, "total_number_of_modded_asn"] += number
-            #         elif minimod[0].value in "ST":
-            #             if analysis == "O-glycan":
-            #                 for mo in minimod[0].mods:
-            #                     self.data.at[i, "total_number_of_modded_ser_thr"] += number
+
             # Get parse glycans from glycan column into a list
             glycans = []
             if pd.notnull(r[glycans_column_name]):
@@ -259,34 +214,6 @@ class GlypnirOComponent:
                 if self.trust_byonic:
                     n_site_status = {}
                     p_n = r[protein_column_name].lstrip(">")
-                    # print(self.protein_name, p_n)
-
-                    # motifs = [match for match in seq.find_with_regex(motif, ignore=seq.gaps())]
-                    # if self.analysis == "N-glycan":
-                    #     if len(fasta_library[p_n]) >= origin_seq + expand_window:
-                    #         if expand_window:
-                    #             expanded_window = Sequence(fasta_library[p_n][origin_seq: origin_seq + len(self.data.at[i, "stripped_seq"]) + expand_window])
-                    #             expanded_window_motifs = [match for match in expanded_window.find_with_regex(motif, ignore=expanded_window.gaps())]
-                    #             origin_map = [i.start + origin_seq for i in expanded_window_motifs]
-                    #             if len(expanded_window_motifs) > len(motifs):
-                    #                 self.data.at[i, "expanded_motif"] = str(expanded_window[expanded_window_motifs[-1]])
-                    #             self.data.at[i, "expanded_aa"] = str(expanded_window[-expand_window:])
-                    #
-                    #     else:
-                    #         origin_map = [i.start + origin_seq for i in motifs]
-                    # else:
-                    #     origin_map = [i.start + origin_seq for i in motifs]
-                    #
-                    # if analysis == "N-glycan":
-                    #     self.data.at[i, "total_number_of_asn"] = seq.count("N", 0, len(seq))
-                    #     if expand_window:
-                    #         self.data.at[i, "total_number_of_n-linked_sequon"] = len(expanded_window_motifs)
-                    #     else:
-                    #         self.data.at[i, "total_number_of_n-linked_sequon"] = len(motifs)
-                    #     self.data.at[i, "total_number_of_unmodded_asn"] = self.data.at[i, "total_number_of_asn"] - self.data.at[i, "total_number_of_modded_asn"]
-                    # elif analysis == "O-glycan":
-                    #     self.data.at[i, "total_number_of_ser_thr"] = seq.count("S", 0, len(seq)) + seq.count("T", 0, len(seq))
-                    #     self.data.at[i, "total_number_of_unmodded_ser_or_thr"] = self.data.at[i, "total_number_of_modded_ser_thr"] - self.data.at[i, "total_number_of_modded_ser_thr"]
 
                     # current_glycan = 0
                     max_glycans = len(glycans)
@@ -305,20 +232,7 @@ class GlypnirOComponent:
                         if seq[aa].mods:
                             mod_value = float(seq[aa].mods[0].value)
                             round_mod_value = round(mod_value)
-                            # str_mod_value = seq[aa].mods[0].value[0] + str(round_mod_value)
-                            #if str_mod_value in modifications:
-                                # if seq[aa].value in "ST" and analysis == "O-glycan":
-                                #     if round_mod_value == 80:
-                                #         continue
 
-                                # if seq[aa].value in modifications[str_mod_value]:
-                                    # if seq[aa].value == "N" and round_mod_value == 1:
-                                    #     seq[aa].extra = "Deamidated"
-                                    #     continue
-
-                                    # if modifications[str_mod_value][seq[aa].value]['number'] > 0:
-                                    #     modifications[str_mod_value][seq[aa].value]['number'] -= 1
-                                    #     seq[aa].mods[0].mass = mod_value
                             round_3 = round(mod_value, 3)
                             # if the glycan is identified to be found, store the position of the glycosylated amino acid on the protein sequence for later reference
                             if str(round_3) in glycan_dict:
@@ -334,95 +248,6 @@ class GlypnirOComponent:
                         self.data.at[i, "position_to_glycan"] = ",".join(glycan_reordered)
                     self.data.at[i, "glycoprofile"] = ";".join(glycosylated_site)
 
-                                # if seq[aa].value == "N":
-                                #     if analysis == "N-glycan":
-                                #         if self.trust_byonic:
-                                #             if  not in origin_map:
-                                #
-                                #             # position = "{}_position".format(str(glycosylation_count))
-                                #             # self.data.at[i, position] = seq[aa].value + str(
-                                #             #     r[starting_position_column_name]+aa)
-                                #             # self.data.at[i, position + "_match"] = "H"
-                                #             # glycosylation_count += 1
-                                #         self.data.at[i, "total_number_of_hexnac"] += 1
-                                # elif seq[aa].value in "ST":
-                                #     if analysis == "O-glycan":
-                                #         self.data.at[i, "total_number_of_hex"] += 1
-
-
-                            # if mod_value in modifications:
-                            #     if seq[aa].value in "ST" and analysis == "O-glycan":
-                            #         if round_mod_value == 80:
-                            #             continue
-                            #
-                            #     if seq[aa].value in modifications[mod_value]:
-                            #         if seq[aa].value == "N" and round_mod_value == 1:
-                            #             seq[aa].extra = "Deamidated"
-                            #             continue
-                            #         if modifications[mod_value][seq[aa].value]['number'] > 0:
-                            #             modifications[mod_value][seq[aa].value]['number'] -= 1
-                            #             seq[aa].mods[0].mass = float(seq[aa].mods[0].value)
-                            #
-                            #             if max_glycans and current_glycan != max_glycans:
-                            #
-                            #                 seq[aa].mods[0].value = glycans[current_glycan]
-                            #                 seq[aa].extra = "Glycosylated"
-                            #
-                            #                 if seq[aa].value == "N":
-                            #                     if analysis == "N-glycan":
-                            #                         if "hexnac" in glycans[current_glycan].lower():
-                            #                             self.data.at[i, "total_number_of_hexnac"] += 1
-                            #
-                            #                 elif seq[aa].value in "ST":
-                            #                     if analysis == "O-glycan":
-                            #                         self.data.at[i, "total_number_of_hex"] += 1
-                            #
-                            #                 current_glycan += 1
-                                            #if current_glycan == max_glycans:
-                                                #break
-
-                    # for n in origin_map:
-                    #     position = "{}_position".format(str(glycosylation_count))
-                    #     self.data.at[i, position] = seq[n-origin_seq+1].value + str(
-                    #         n + 1)
-                    #
-                    #     if seq[n-origin_seq+1].extra == "Glycosylated":
-                    #         self.data.at[i, position + "_match"] = "H"
-                    #     elif seq[n-origin_seq+1].extra == "Deamidated":
-                    #         self.data.at[i, position + "_match"] = "D"
-                    #     else:
-                    #         self.data.at[i, position + "_match"] = "U"
-                    #
-                    #     if analysis == "N-glycan":
-                    #         if self.legacy:
-                    #             if self.data.at[i, "total_number_of_n-linked_sequon"] != self.data.at[i, "total_number_of_hexnac"]:
-                    #                 if seq[n-origin_seq+1].extra == "Deamidated":
-                    #                     if self.data.at[i, "total_number_of_hexnac"] > 0:
-                    #                         self.data.at[i, position + "_match"] = "D/H"
-                    #                         if self.data.at[i, "total_number_of_unmodded_asn"] > 0:
-                    #                             self.data.at[i, position + "_match"] = "D/H/U"
-                    #                     else:
-                    #                         self.data.at[i, position + "_match"] = "D"
-                    #                 else:
-                    #                     if self.data.at[i, "total_number_of_hexnac"] > 0:
-                    #                         if self.data.at[i, "total_number_of_deamidation"] == 0:
-                    #                             self.data.at[i, position + "_match"] = "H"
-                    #                         else:
-                    #                             self.data.at[i, position + "_match"] ="D/H"
-                    #                         if self.data.at[i, "total_number_of_unmodded_asn"] > 0:
-                    #                             self.data.at[i, position + "_match"] = "D/H/U"
-                    #                 if not seq[n-origin_seq+1].extra:
-                    #                     if self.data.at[i, "total_number_of_hexnac"] > 0 and self.data.at[i, "total_number_of_deamidation"]> 0:
-                    #                         self.data.at[i, position + "_match"] = "D/H"
-                    #                         if self.data.at[i, "total_number_of_unmodded_asn"] > 0:
-                    #                             self.data.at[i, position + "_match"] = "D/H/U"
-                    #                     elif self.data.at[i, "total_number_of_hexnac"] > 0:
-                    #                         self.data.at[i, position + "_match"] = "H"
-                    #                         if self.data.at[i, "total_number_of_unmodded_asn"] > 0:
-                    #                             self.data.at[i, position + "_match"] = "D/H/U"
-                    #                     else:
-                    #                         self.data.at[i, position + "_match"] = "U"
-                    #     glycosylation_count += 1
                 else:
                     # if the analysis is only done on peptide and glycan combination, we would only need to set whether the peptide is glycosylated and store the unformatted peptide sequence of the glycosylated one for later reference
                     if pd.notnull(r[glycans_column_name]):
@@ -445,19 +270,11 @@ class GlypnirOComponent:
             # if trust byonic we would analyze by grouping the data at unformatted sequence, glycosylated positions and calculated m/z
             seq_glycosites = list(self.sequon_glycosites)
             seq_glycosites.sort()
-            # print(seq_glycosites)
-            # if self.analysis == "N-glycan":
-                # if max_sites == 0:
-                #     temp = temp[(0 < temp["total_number_of_n-linked_sequon"])]
-                # else:
-                #     temp = temp[(0 < temp["total_number_of_n-linked_sequon"]) & (temp["total_number_of_n-linked_sequon"]<= max_sites) ]
-            for i, g in temp.groupby(["stripped_seq", "z", "glycoprofile", observed_mz]):
+
+            for i, g in temp.groupby(["stripped_seq", "glycoprofile", observed_mz]):
                 seq_within = []
                 # select row with highest area value in a group
                 unique_row = g.loc[g["Area"].idxmax()]
-                #
-                # glycan = 0
-                # first_site = ""
 
                 if seq_glycosites:
                     for n in seq_glycosites:
@@ -466,47 +283,7 @@ class GlypnirOComponent:
                             # print(unique_row["stripped_seq"], n, unique_row[starting_position_column_name])
                             seq_within.append(
                                 unique_row["stripped_seq"][n-unique_row[starting_position_column_name]]+str(n))
-                # print(unique_row)
-                # if self.legacy:
-                #     for c in range(len(unique_row.index)):
-                #         if unique_row.index[c].endswith("_position"):
-                #
-                #             if pd.notnull(unique_row[unique_row.index[c]]):
-                #                 if not first_site:
-                #                     first_site = unique_row[unique_row.index[c]]
-                #                 if unique_row[unique_row.index[c]] not in result:
-                #                     result[unique_row[unique_row.index[c]]] = {}
-                #
-                #                 if "U" in unique_row[unique_row.index[c+1]]:
-                #                     if "U" not in result[unique_row[unique_row.index[c]]]:
-                #                         result[unique_row[unique_row.index[c]]]["U"] = 0
-                #                     result[unique_row[unique_row.index[c]]]["U"] += unique_row["Area"]
-                #                 elif "D" in unique_row[unique_row.index[c+1]]:
-                #                     if combine_d_u:
-                #                         if "U" not in result[unique_row[unique_row.index[c]]]:
-                #                             result[unique_row[unique_row.index[c]]]["U"] = 0
-                #                         result[unique_row[unique_row.index[c]]]["U"] += unique_row["Area"]
-                #                     else:
-                #                         if "D" not in result[unique_row[unique_row.index[c]]]:
-                #                             result[unique_row[unique_row.index[c]]]["D"] = 0
-                #                         result[unique_row[unique_row.index[c]]]["D"] += unique_row["Area"]
-                #                 else:
-                #                     if splitting_sites or unique_row["total_number_of_hexnac"] == 1:
-                #
-                #                         if self.row_to_glycans[unique_row.name][glycan] not in result[unique_row[unique_row.index[c]]]:
-                #                             result[unique_row[unique_row.index[c]]][self.row_to_glycans[unique_row.name][glycan]] = 0
-                #                         result[unique_row[unique_row.index[c]]][
-                #                             self.row_to_glycans[unique_row.name][glycan]] += unique_row["Area"]
-                #                         glycan += 1
-                #
-                #                     else:
-                #                         if unique_row["total_number_of_hexnac"] > 1 and not splitting_sites:
-                #                             temporary_glycan = ";".join(self.row_to_glycans[unique_row.name][glycan])
-                #
-                #                             if temporary_glycan not in result[unique_row[unique_row.index[c]]]:
-                #                                 result[unique_row[unique_row.index[c]]][temporary_glycan] = unique_row["Area"]
-                #                         break
-                # else:
+
                 glycosylation_count = 0
                 glycans = unique_row["position_to_glycan"].split(",")
                 # create a dataset of position, glycans associate to that position and area under the curve of them
@@ -522,31 +299,7 @@ class GlypnirOComponent:
                 if seq_within:
                     for s in seq_within:
                         result.append({"Position": s, "Glycans": "U", "Value": unique_row["Area"]})
-                # if N_combo:
-                #
-                #     N_combo.sort()
-                #     sequons = ";".join(N_combo)
-                #
-                #     # working_isoform = unique_row["isoform"]
-                #     # if working_isoform not in result:
-                #     #     # if working_isoform != 1.0 and 1.0 in result:
-                #     #     #     if sequons in result[working_isoform][1.0]:
-                #     #     #         if unique_row[glycans_column_name] in result[working_isoform][1.0][sequons] or "U" in result[working_isoform][1.0][sequons]:
-                #     #     #             working_isoform = 1.0
-                #     #     # else:
-                #     #     result[working_isoform] = {}
-                #     if sequons not in result[working_isoform]:
-                #         result[working_isoform][sequons] = {}
-                #     #if pd.notnull(unique_row[glycans_column_name]):
-                #     if unique_row[glycans_column_name] != "None":
-                #         if unique_row[glycans_column_name] not in result[working_isoform][sequons]:
-                #             result[working_isoform][sequons][unique_row[glycans_column_name]] = 0
-                #         result[working_isoform][sequons][unique_row[glycans_column_name]] += unique_row["Area"]
-                #     else:
-                #         if "U" not in result[working_isoform][sequons]:
-                #             result[working_isoform][sequons]["U"] = 0
-                #         result[working_isoform][sequons]["U"] += unique_row["Area"]
-                #         #print(result)
+
             if result:
                 result = pd.DataFrame(result)
                 # sum area under the curve of those with the same glycosylation position and glycan composition
@@ -555,16 +308,11 @@ class GlypnirOComponent:
                 out = group.agg(np.sum).reset_index()
             else:
                 out = pd.DataFrame([], columns=["Position", "Glycans", "Values"])
-            # for k in result:
-            #     for k2 in result[k]:
-            #         for k3 in result[k][k2]:
-            #             out.append({"Isoform": k, "Position": k2, "Glycans": k3, "Value": result[k][k2][k3]})
+
         else:
-            # result_total = {}
-            # if max_sites != 0:
-            #     temp = temp[temp['total_number_of_hex'] <= max_sites]
+
             # if a peptide level analysis was done, the grouping would be on unformatted sequence, glycan combination, position of the peptide N-terminus, calculated m/z
-            for i, g in temp.groupby(["stripped_seq", "z", glycans_column_name, starting_position_column_name, observed_mz]):
+            for i, g in temp.groupby(["stripped_seq", glycans_column_name, starting_position_column_name, observed_mz]):
                 # select and create a dataset of unique psm compositing of the unformatted sequence, glycans, area under the curve and position of the peptide N-terminus
                 unique_row = g.loc[g["Area"].idxmax()]
 
@@ -577,43 +325,6 @@ class GlypnirOComponent:
             # sum those area under the curve with the same peptides, position and glycans
             group = result.groupby(["Peptides", "Position", "Glycans"])
             out = group.agg(np.sum).reset_index()
-            #     working_isoform = unique_row["isoform"]
-            #     if working_isoform not in result:
-            #         # if working_isoform != 1.0 and 1.0 in result:
-            #         #     if unique_row["stripped_seq"] in result[working_isoform][1.0]:
-            #         #         #if i[3] in result[working_isoform][1.0][unique_row["stripped_seq"]]:
-            #         #             # if unique_row[glycans_column_name] in result[working_isoform][1.0][unique_row["stripped_seq"]][i[3]] or "U" in \
-            #         #             #         result[working_isoform][1.0][unique_row["stripped_seq"]][i[3]]:
-            #         #         working_isoform = 1.0
-            #         # else:
-            #             result[working_isoform] = {}
-            #
-            #     if unique_row["stripped_seq"] not in result[working_isoform]:
-            #         result[working_isoform][unique_row["stripped_seq"]] = {}
-            #         # result_total[unique_row["isoform"]][unique_row["stripped_seq"]] = 0
-            #     if i[3] not in result[working_isoform][unique_row["stripped_seq"]]:
-            #         result[working_isoform][unique_row["stripped_seq"]][i[3]] = {}
-            #     if i[2] == "None":
-            #         if "U" not in result[working_isoform][unique_row["stripped_seq"]][i[3]]:
-            #             result[working_isoform][unique_row["stripped_seq"]][i[3]]["U"] = 0
-            #         result[working_isoform][unique_row["stripped_seq"]][i[3]]["U"] += unique_row["Area"]
-            #
-            #     else:
-            #         # if splitting_sites:
-            #         #     for gly in self.row_to_glycans[unique_row.name]:
-            #         #         if gly not in result[working_isoform][unique_row["stripped_seq"]][i[3]]:
-            #         #             result[working_isoform][unique_row["stripped_seq"]][i[3]][gly] = 0
-            #         #         result[working_isoform][unique_row["stripped_seq"]][i[3]][gly] += unique_row["Area"]
-            #         # else:
-            #         if unique_row[glycans_column_name] not in result[working_isoform][unique_row["stripped_seq"]][i[3]]:
-            #             result[working_isoform][unique_row["stripped_seq"]][i[3]][unique_row[glycans_column_name]] = 0
-            #         result[working_isoform][unique_row["stripped_seq"]][i[3]][unique_row[glycans_column_name]] += unique_row["Area"]
-            #
-            # for k in result:
-            #     for k2 in result[k]:
-            #         for k3 in result[k][k2]:
-            #             for k4 in result[k][k2][k3]:
-            #                 out.append({"Isoform": k, "Peptides": k2, "Glycans": k4, "Value": result[k][k2][k3][k4], "Position": k3})
 
         return Result(out)
 
@@ -717,12 +428,7 @@ class GlypnirO:
 
     # analysis of the compiled data
     def analyze_components(self):
-        # template = self.components[["Protein", "condition_id", "replicate_id"]].sort_values(["Protein", "condition_id", "replicate_id"])
-        # template["label"] = pd.Series(["Raw"]*len(template.index), index=template.index)
-        # template_proportion = template.copy()
-        # template_proportion["label"] = pd.Series(["Proportion"]*len(template_proportion.index), index=template_proportion.index)
-        #
-        # index = pd.MultiIndex.from_frame(pd.concat([template, template_proportion], ignore_index=True)[["Protein", "label", "condition_id", "replicate_id"]])
+
         result = []
         result_without_u = []
         result_occupancy_no_calculation_u = []
@@ -775,9 +481,7 @@ class GlypnirO:
                        # "Isoform",
                        "Position peptide N-terminus", "Peptides"])
 
-        # result = result.stack("Protein")
-        # result = result.swaplevel("Protein", "Peptides")
-        # result = result.swaplevel("Glycans", "Peptides")
+
         print("Finished analysis.")
         return {"Glycoforms":
                     result_glycoform,
