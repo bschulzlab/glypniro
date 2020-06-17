@@ -1,5 +1,5 @@
 import unittest
-from modification import Modification
+from sequal.modification import Modification
 
 
 class ModificationTestCase(unittest.TestCase):

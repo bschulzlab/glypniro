@@ -6,8 +6,20 @@ modifier = {
     "b": -18-19,
 }
 
+# Ion fragment sequence object, similar property to the original sequence object
 class Ion(Sequence):
     def __init__(self, seq, charge=1, ion_type=None, fragment_number=None):
+        """
+
+        :type fragment_number: int
+        number of the transition
+        :type ion_type: str
+        name of transition type
+        :type charge: int
+        ion charge
+        :type seq: Sequence
+        Sequence object to be converted into an Ion fragment
+        """
         super().__init__(seq)
         self.charge = charge
         self.ion_type = ion_type
@@ -22,6 +34,7 @@ class Ion(Sequence):
                 if m.labile:
                     self.has_labile = True
 
+    # Calculate the mz of the ion
     def mz_calculate(self, charge=None, with_water=False, extra_mass=0):
         if not charge:
             charge = self.charge

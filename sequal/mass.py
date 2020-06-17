@@ -1,9 +1,22 @@
-from sequal.amino_acid import AminoAcid
-from sequal.sequence import Sequence
 from sequal import resources
 
-
+# Calculate the mass of a Sequence object using a mass dictionary of block names
 def calculate_mass(seq, mass_dict=None, N_terminus=0, O_terminus=0, with_water=True):
+    """
+
+    :rtype: float
+    mass of the sequence calculated using the input parameters
+    :type with_water: bool
+    whether or not to add the mass of water
+    :type O_terminus: int or float
+    mass at the C-terminus of the sequence
+    :type N_terminus: int or float
+    mass at the N-terminus of the sequence
+    :type mass_dict: dict
+    a dictionary of mass containing mass of potential modifications and amino acids
+    :type seq: sequal.sequence.Sequence
+    a Sequence object
+    """
     mass = 0
     if with_water:
         mass += resources.H*2 + resources.O

@@ -10,7 +10,7 @@ mod_pattern = re.compile(r"[\(|\[]+([^\)]+)[\)|\]]+")
 mod_enclosure_start = {"(", "[", "{"}
 mod_enclosure_end = {")", "]", "}"}
 
-
+# Base sequence object for peptide or protein sequences and their fragments
 class Sequence:
     seq: List[Any]
 
