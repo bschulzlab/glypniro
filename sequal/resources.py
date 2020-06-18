@@ -1,3 +1,5 @@
+# Hardcoded resources for use of calculating mass for sequences, mass spectrometry ion fragments and glycans
+
 proton = 1.007277
 H = 1.007825
 O = 15.99491463

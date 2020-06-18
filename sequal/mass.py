@@ -1,6 +1,6 @@
 from sequal import resources
 
-# Calculate the mass of a Sequence object using a mass dictionary of block names
+# Calculate the mass of a Sequence object using a mass dictionary of
 def calculate_mass(seq, mass_dict=None, N_terminus=0, O_terminus=0, with_water=True):
     """
 
