@@ -47,5 +47,9 @@ if __name__ == "__main__":
         result["Occupancy_Without_Proportion_U"].to_excel(writer, sheet_name="Unglyco_and_Glycoforms_Sep")
         result["Occupancy_With_U"].to_excel(writer, sheet_name="Unglycosylated")
         result["Glycoforms"].to_excel(writer, sheet_name="Glycoforms")
+    for u in result.unique_dict:
+        with pd.ExcelWriter(args.o+"_"+u+".xlsx") as writer:
+            df = pd.concat(result.unique_dict[u], ignore_index=True)
+            df.to_excel(writer)
     print("Completed.")
 

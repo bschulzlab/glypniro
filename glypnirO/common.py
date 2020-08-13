@@ -170,6 +170,7 @@ class GlypnirOComponent:
         self.legacy = legacy
         self.sequon_glycosites = set()
         self.glycosylated_seq = set()
+        self.unique_rows = []
 
     # method for calculate glycan mass from string syntax using regular expression and a dictionary of glycan block and their mass
     def calculate_glycan(self, glycan):
@@ -274,7 +275,9 @@ class GlypnirOComponent:
             for i, g in temp.groupby(["stripped_seq", "glycoprofile", observed_mz]):
                 seq_within = []
                 # select row with highest area value in a group
-                unique_row = g.loc[g["Area"].idxmax()]
+                max_area_row = g["Area"].idxmax()
+                self.unique_rows.append(max_area_row)
+                unique_row = g.loc[max_area_row]
 
                 if seq_glycosites:
                     for n in seq_glycosites:
@@ -314,7 +317,9 @@ class GlypnirOComponent:
             # if a peptide level analysis was done, the grouping would be on unformatted sequence, glycan combination, position of the peptide N-terminus, calculated m/z
             for i, g in temp.groupby(["stripped_seq", glycans_column_name, starting_position_column_name, observed_mz]):
                 # select and create a dataset of unique psm compositing of the unformatted sequence, glycans, area under the curve and position of the peptide N-terminus
-                unique_row = g.loc[g["Area"].idxmax()]
+                max_area_row = g["Area"].idxmax()
+                self.unique_rows.append(max_area_row)
+                unique_row = g.loc[max_area_row]
 
                 if unique_row[glycans_column_name] != "None":
                     result.append({"Peptides": i[0], "Glycans": i[2], "Value": unique_row["Area"], "Position": i[3]})
@@ -335,6 +340,7 @@ class GlypnirO:
         self.components = None
         self.uniprot_parsed_data = pd.DataFrame([])
         self.get_uniprot = get_uniprot
+        self.unique_dict = {}
 
     def add_component(self, filename, area_filename, replicate_id, sample_id):
         component = GlypnirOComponent(filename, area_filename, replicate_id, sample_id)
@@ -432,10 +438,16 @@ class GlypnirO:
         result = []
         result_without_u = []
         result_occupancy_no_calculation_u = []
+
         for i, r in self.components.iterrows():
             print("Analyzing", r["Protein"], r["condition_id"], r["replicate_id"], r["component"].protein_name)
+            unique_name = str(r["condition_id"]) + str(r["replicate_id"])
+            if unique_name not in self.unique_dict:
+                self.unique_dict[unique_name] = []
+
             analysis_result = r["component"].analyze()
             if not analysis_result.empty:
+                self.unique_dict[unique_name].append(r["component"].data.iloc[r["component"].unique_rows])
                 # get raw and proportional calculation of unique psm auc with unglycosylated peptide
                 a = analysis_result.to_summary(name="Raw", trust_byonic=self.trust_byonic)
                 pro = analysis_result.calculate_proportion()
