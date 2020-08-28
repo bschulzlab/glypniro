@@ -37,7 +37,7 @@ parser.add_argument("-p",
 
 parser.add_argument("-d",
                     "--debug",
-                    help="In conjuntion to the final output, the script would also create debug files that contain the "
+                    help="In conjunction to the final output, the script would also create debug files that contain the "
                          "unique PSM selected for calculation of the data in the final output",
                     action="store_true")
 

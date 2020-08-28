@@ -3,8 +3,8 @@ from sequal.sequence import Sequence
 from sequal.resources import proton
 import os
 
-byonic_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\Byonic Library Wine VITGVPWYSSR Hex 2 charge 2 removed-Pau_Updated.xlsx"
-peakview_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\MCP PeakVeiw Peptide FDR VITGVPWYSSR Hex 2 charge 2 removed.xlsx"
+byonic_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\Byonic Library Wine VITGVPWY_SSR_STR Hex2 charge 2 removed-Pau_Position_Updated.xlsx"
+peakview_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\UTAS PeakVeiw Peptide FDR VITGVPWY_SSR_STR Hex2 charge 2 removed.xlsx"
 dia_library_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\20190605_Combined_Byonic_Grape_Yeast_ProteinPilot_Pau4_2_No_LOC100247730_Added_KPYK2.txt"
 
 if __name__ == "__main__":

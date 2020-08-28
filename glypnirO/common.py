@@ -397,8 +397,8 @@ class GlypnirO:
                                         data.at[i2, "isoform"] = 1
 
                                 else:
-                                    if not self.get_uniprot:
-                                        protein_list.append([r2[protein_column_name], r2[protein_column_name]])
+
+                                    protein_list.append([r2[protein_column_name], r2[protein_column_name]])
                                     data.at[i2, "master_id"] = r2[protein_column_name]
                                     data.at[i2, "isoform"] = 1
                             else:
@@ -550,13 +550,17 @@ class GlypnirO:
                     frame = frame.rename(columns={frame.columns[-1]: "query"})
                     data.append(frame)
                 self.uniprot_parsed_data = pd.concat(data, ignore_index=True)
-                #
                 self.uniprot_parsed_data = self.uniprot_parsed_data[['Entry', 'Protein names']]
+                not_in = []
+                for i in accessions:
+                    if i not in self.uniprot_parsed_data['Entry']:
+                        not_in.append([i, i])
+                not_in = pd.DataFrame(not_in, columns=["Entry", "Protein names"])
+                self.uniprot_parsed_data = pd.concat([self.uniprot_parsed_data, not_in], ignore_index=True)
+
         else:
             self.uniprot_parsed_data = self.uniprot_parsed_data.groupby(["Entry"]).head(1).reset_index().drop(["index"], axis=1)
 
-        print(result_data)
-        print(self.uniprot_parsed_data)
         result_data = result_data.merge(self.uniprot_parsed_data, left_on="Protein", right_on="Entry")
         result_data.drop("Entry", 1, inplace=True)
 
