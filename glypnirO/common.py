@@ -155,10 +155,12 @@ class GlypnirOComponent:
         self.condition_id = condition_id
         self.data = data[data["Area"].notnull()]
         self.data = self.data[(self.data["Score"] >= minimum_score) &
-                         (self.data[protein_column_name].str.contains(protein_name))
+                              ((self.data[protein_column_name].str.contains(protein_name)) | (self.data[protein_column_name].str.startswith(protein_name)))
                          # (data["Protein Name"] == ">"+protein_name) &
                          ]
+
         self.data = self.data[~self.data[protein_column_name].str.contains(">Reverse")]
+
         if len(self.data.index) > 0:
             self.empty = False
         else:
@@ -171,6 +173,7 @@ class GlypnirOComponent:
         self.sequon_glycosites = set()
         self.glycosylated_seq = set()
         self.unique_rows = []
+
 
     # method for calculate glycan mass from string syntax using regular expression and a dictionary of glycan block and their mass
     def calculate_glycan(self, glycan):
@@ -231,20 +234,23 @@ class GlypnirOComponent:
                     # iterating through the unformated sequence and assign glycan to modified position based on the modified mass
                     for aa in range(1, len(seq) - 1):
                         if seq[aa].mods:
-                            mod_value = float(seq[aa].mods[0].value)
-                            round_mod_value = round(mod_value)
+                            try:
+                                mod_value = float(seq[aa].mods[0].value)
+                                round_mod_value = round(mod_value)
 
-                            round_3 = round(mod_value, 3)
-                            # if the glycan is identified to be found, store the position of the glycosylated amino acid on the protein sequence for later reference
-                            if str(round_3) in glycan_dict:
-                                seq[aa].extra = "Glycosylated"
-                                pos = int(r[starting_position_column_name]) + aa - 2
-                                self.sequon_glycosites.add(pos + 1)
-                                position = "{}_position".format(str(glycosylation_count))
-                                self.data.at[i, position] = seq[aa].value + str(pos + 1)
-                                glycosylated_site.append(self.data.at[i, position] + "_" + str(round_mod_value))
-                                glycosylation_count += 1
-                                glycan_reordered.append(glycan_dict[str(round_3)])
+                                round_3 = round(mod_value, 3)
+                                # if the glycan is identified to be found, store the position of the glycosylated amino acid on the protein sequence for later reference
+                                if str(round_3) in glycan_dict:
+                                    seq[aa].extra = "Glycosylated"
+                                    pos = int(r[starting_position_column_name]) + aa - 2
+                                    self.sequon_glycosites.add(pos + 1)
+                                    position = "{}_position".format(str(glycosylation_count))
+                                    self.data.at[i, position] = seq[aa].value + str(pos + 1)
+                                    glycosylated_site.append(self.data.at[i, position] + "_" + str(round_mod_value))
+                                    glycosylation_count += 1
+                                    glycan_reordered.append(glycan_dict[str(round_3)])
+                            except ValueError:
+                                pass
                     if glycan_reordered:
                         self.data.at[i, "position_to_glycan"] = ",".join(glycan_reordered)
                     self.data.at[i, "glycoprofile"] = ";".join(glycosylated_site)
@@ -257,9 +263,10 @@ class GlypnirOComponent:
                         self.data.at[i, glycans_column_name] = ",".join(glycans)
                         self.data.at[i, "glycosylation_status"] = True
                         self.glycosylated_seq.add(self.data.at[i, "stripped_seq"])
+                        #print(self.glycosylated_seq)
 
     # analyze the compiled data by identifying unique PSM and calculate cumulative raw area under the curve
-    def analyze(self, max_sites=0, combine_d_u=True, splitting_sites=False):
+    def analyze(self, max_sites=0, combine_d_u=True, splitting_sites=False, debug=False):
         result = []
         # sort the data first by area then score in descending order.
         temp = self.data.sort_values(["Area", "Score"], ascending=False)
@@ -276,8 +283,9 @@ class GlypnirOComponent:
                 seq_within = []
                 # select row with highest area value in a group
                 max_area_row = g["Area"].idxmax()
-                self.unique_rows.append(max_area_row)
+
                 unique_row = g.loc[max_area_row]
+
 
                 if seq_glycosites:
                     for n in seq_glycosites:
@@ -285,11 +293,14 @@ class GlypnirOComponent:
                         if unique_row[starting_position_column_name] <= n < unique_row["Ending Position"]:
                             # print(unique_row["stripped_seq"], n, unique_row[starting_position_column_name])
                             seq_within.append(
-                                unique_row["stripped_seq"][n-unique_row[starting_position_column_name]]+str(n))
+                                unique_row["stripped_seq"][int(n-unique_row[starting_position_column_name])]+str(n))
 
                 glycosylation_count = 0
                 glycans = unique_row["position_to_glycan"].split(",")
                 # create a dataset of position, glycans associate to that position and area under the curve of them
+                if debug:
+                    if seq_within:
+                        self.unique_rows.append(unique_row)
                 for c in range(len(unique_row.index)):
                     if unique_row.index[c].endswith("_position"):
                         if pd.notnull(unique_row[unique_row.index[c]]):
@@ -300,6 +311,7 @@ class GlypnirOComponent:
                             glycosylation_count += 1
 
                 if seq_within:
+
                     for s in seq_within:
                         result.append({"Position": s, "Glycans": "U", "Value": unique_row["Area"]})
 
@@ -318,29 +330,33 @@ class GlypnirOComponent:
             for i, g in temp.groupby(["stripped_seq", glycans_column_name, starting_position_column_name, observed_mz]):
                 # select and create a dataset of unique psm compositing of the unformatted sequence, glycans, area under the curve and position of the peptide N-terminus
                 max_area_row = g["Area"].idxmax()
-                self.unique_rows.append(max_area_row)
+
                 unique_row = g.loc[max_area_row]
+                if debug:
+                    self.unique_rows.append(unique_row)
 
                 if unique_row[glycans_column_name] != "None":
-                    result.append({"Peptides": i[0], "Glycans": i[2], "Value": unique_row["Area"], "Position": i[3]})
+                    result.append({"Peptides": i[0], "Glycans": i[1], "Value": unique_row["Area"], "Position": i[2]})
                 else:
-                    result.append({"Peptides": i[0], "Glycans": "U", "Value": unique_row["Area"], "Position": i[3]})
+                    result.append({"Peptides": i[0], "Glycans": "U", "Value": unique_row["Area"], "Position": i[2]})
 
             result = pd.DataFrame(result)
             # sum those area under the curve with the same peptides, position and glycans
             group = result.groupby(["Peptides", "Position", "Glycans"])
             out = group.agg(np.sum).reset_index()
-
+            # print(out)
         return Result(out)
 
 
 class GlypnirO:
-    def __init__(self, trust_byonic=False, get_uniprot=False):
+    def __init__(self, trust_byonic=False, get_uniprot=False, debug=False, parse_uniprot=False):
         self.trust_byonic = trust_byonic
         self.components = None
         self.uniprot_parsed_data = pd.DataFrame([])
         self.get_uniprot = get_uniprot
         self.unique_dict = {}
+        self.debug = debug
+        self.parse_uniprot = parse_uniprot
 
     def add_component(self, filename, area_filename, replicate_id, sample_id):
         component = GlypnirOComponent(filename, area_filename, replicate_id, sample_id)
@@ -360,27 +376,37 @@ class GlypnirO:
             components = []
             for i, r in self.components.iterrows():
                 data = pd.read_excel(r["filename"], sheet_name="Spectra")
+                data = data[data[starting_position_column_name].notnull()]
                 protein_id_column = protein_column_name
                 if combine_uniprot_isoform:
                     protein_id_column = "master_id"
                     for i2, r2 in data.iterrows():
                         # search for uniprot accession id in protein column name
-                        search = uniprot_regex.search(r2[protein_column_name])
-                        # if the protein is not a decoy or labelled as common contaminant, the accession id would be saved into a master_id column. If no accession id, the whole protein name would be saved there instead.
-                        if not r2[protein_column_name].startswith(">Reverse") and not r2[protein_column_name].endswith("(Common contaminant protein)"):
-                            if search:
-                                data.at[i2, "master_id"] = search.groupdict(default="")["accession"]
-                                if not self.get_uniprot:
-                                    protein_list.append([search.groupdict(default="")["accession"], r2[protein_column_name]])
-                                if search.groupdict(default="")["isoform"] != "":
-                                    data.at[i2, "isoform"] = int(search.groupdict(default="")["isoform"][1:])
-                                else:
-                                    data.at[i2, "isoform"] = 1
 
+                        # if the protein is not a decoy or labelled as common contaminant, the accession id would be saved into a master_id column. If no accession id, the whole protein name would be saved there instead.
+                        if self.parse_uniprot:
+                            search = uniprot_regex.search(r2[protein_column_name])
+                            if not r2[protein_column_name].startswith(">Reverse") and not r2[protein_column_name].endswith("(Common contaminant protein)"):
+                                if search:
+                                    data.at[i2, "master_id"] = search.groupdict(default="")["accession"]
+                                    if not self.get_uniprot:
+                                        protein_list.append([search.groupdict(default="")["accession"], r2[protein_column_name]])
+                                    if search.groupdict(default="")["isoform"] != "":
+                                        data.at[i2, "isoform"] = int(search.groupdict(default="")["isoform"][1:])
+                                    else:
+                                        data.at[i2, "isoform"] = 1
+
+                                else:
+                                    if not self.get_uniprot:
+                                        protein_list.append([r2[protein_column_name], r2[protein_column_name]])
+                                    data.at[i2, "master_id"] = r2[protein_column_name]
+                                    data.at[i2, "isoform"] = 1
                             else:
+                                protein_list.append([r2[protein_column_name], r2[protein_column_name]])
                                 data.at[i2, "master_id"] = r2[protein_column_name]
                                 data.at[i2, "isoform"] = 1
                         else:
+                            protein_list.append([r2[protein_column_name], r2[protein_column_name]])
                             data.at[i2, "master_id"] = r2[protein_column_name]
                             data.at[i2, "isoform"] = 1
 
@@ -432,6 +458,7 @@ class GlypnirO:
             # print("Processing {} - {} {} for {}".format(r["condition_id"], r["replicate_id"], r["Protein"], analysis))
             r["component"].process()
 
+
     # analysis of the compiled data
     def analyze_components(self):
 
@@ -445,14 +472,18 @@ class GlypnirO:
             if unique_name not in self.unique_dict:
                 self.unique_dict[unique_name] = []
 
-            analysis_result = r["component"].analyze()
+            analysis_result = r["component"].analyze(debug=self.debug)
+
             if not analysis_result.empty:
-                self.unique_dict[unique_name].append(r["component"].data.iloc[r["component"].unique_rows])
+                if self.debug:
+                    self.unique_dict[unique_name] += r["component"].unique_rows
                 # get raw and proportional calculation of unique psm auc with unglycosylated peptide
                 a = analysis_result.to_summary(name="Raw", trust_byonic=self.trust_byonic)
+
                 pro = analysis_result.calculate_proportion()
                 b = analysis_result.to_summary(pro, "Proportion", trust_byonic=self.trust_byonic)
                 temp_df = self._summary(a, r, b)
+                # print(temp_df)
                 result.append(temp_df)
 
                 # proportion for glycoforms here are calculated without unglycosylated form.
@@ -509,11 +540,10 @@ class GlypnirO:
         result_data = pd.concat(result)
         result_data = result_data.reset_index(drop=True)
         accessions = result_data["Protein"].unique()
-
+        # print(self.uniprot_parsed_data)
         if self.uniprot_parsed_data.empty:
             if self.get_uniprot:
                 parser = UniprotParser(accessions, True)
-
                 data = []
                 for i in parser.parse("tab"):
                     frame = pd.read_csv(StringIO(i), sep="\t")
@@ -525,6 +555,8 @@ class GlypnirO:
         else:
             self.uniprot_parsed_data = self.uniprot_parsed_data.groupby(["Entry"]).head(1).reset_index().drop(["index"], axis=1)
 
+        print(result_data)
+        print(self.uniprot_parsed_data)
         result_data = result_data.merge(self.uniprot_parsed_data, left_on="Protein", right_on="Entry")
         result_data.drop("Entry", 1, inplace=True)
 

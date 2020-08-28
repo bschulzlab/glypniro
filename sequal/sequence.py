@@ -130,7 +130,8 @@ class Sequence:
                 if not mods:
                     # current_mod.append(Modification(b[1:-1]))
                     if mod_position == "right":
-                        self.seq[current_position-1].set_modification(Modification(b[1:-1]))
+                        self.seq[current_position-1]\
+                            .set_modification(Modification(b[1:-1]))
                     else:
                         current_mod.append(Modification(b[1:-1]))
 

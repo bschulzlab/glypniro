@@ -20,7 +20,9 @@ The program can be run from the location of the script using `python main.py`. T
 |`-o`, `-output`|Filepath to the output xlsx file for the analysis.|
 |`-s`, `--score_cutoff`|(Optional) Default=200. Cutoff score for filtering of Byonic output|
 |`-t`, `--trust_byonic`|(Optional) Instruct the script to trust glycan position assignment and used them for area under the curve calculation.|
-|`-g`, `--get_uniprot`|Using the `requests` module to access and parse protein name from uniprot accession ids of the proteins of those within the dataset.|
+|`-d`, `--debug`|(Optional) In conjuntion to the final output, the script would also create debug files that contain the unique PSM selected for calculation of the data in the final output.|
+|`-p`, `--parse_uniprot`|(Optional) Attempt to parse UniProt accession ID using regular expression and use them as master id.|
+|`-g`, `--get_uniprot`|(Optional)Using the `requests` module to access and parse protein name from uniprot accession ids of the proteins of those within the dataset.|
 
 ## Input file format
 
