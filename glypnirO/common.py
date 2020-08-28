@@ -550,14 +550,14 @@ class GlypnirO:
                     frame = frame.rename(columns={frame.columns[-1]: "query"})
                     data.append(frame)
                 self.uniprot_parsed_data = pd.concat(data, ignore_index=True)
-                self.uniprot_parsed_data = self.uniprot_parsed_data[['Entry', 'Protein names']]
+
                 not_in = []
                 for i in accessions:
-                    if i not in self.uniprot_parsed_data['Entry']:
+                    if not (self.uniprot_parsed_data["query"] == i).any():
                         not_in.append([i, i])
                 not_in = pd.DataFrame(not_in, columns=["Entry", "Protein names"])
-                self.uniprot_parsed_data = pd.concat([self.uniprot_parsed_data, not_in], ignore_index=True)
-
+                self.uniprot_parsed_data = pd.concat([self.uniprot_parsed_data[['Entry', 'Protein names']], not_in], ignore_index=True)
+                # print(self.uniprot_parsed_data)
         else:
             self.uniprot_parsed_data = self.uniprot_parsed_data.groupby(["Entry"]).head(1).reset_index().drop(["index"], axis=1)
 
