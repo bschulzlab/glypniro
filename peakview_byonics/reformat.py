@@ -3,15 +3,15 @@ from sequal.sequence import Sequence
 from sequal.resources import proton
 import os
 
-byonic_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\Byonic Library Wine VITGVPWY_SSR_STR Hex2 charge 2 removed-Pau_Position_Updated.xlsx"
-peakview_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\UTAS PeakVeiw Peptide FDR VITGVPWY_SSR_STR Hex2 charge 2 removed.xlsx"
+byonic_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\Combined Output Urine.xlsx"
+peakview_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\SWATH_Urine_Combined_Byonic_PP_Export_MicroApp_6min_RT_cal_OUTPUT_Peptides_FDR_0.1.xlsx"
 dia_library_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\20190605_Combined_Byonic_Grape_Yeast_ProteinPilot_Pau4_2_No_LOC100247730_Added_KPYK2.txt"
 
 if __name__ == "__main__":
     byonic = pd.read_excel(byonic_file)
     peakview = pd.read_excel(peakview_file)
     result = []
-    for i, _ in byonic.groupby(["Peptide", "Glycans\nNHFAGNa", "Protein Name", "Starting\nposition", "Calc.\nmass (M+H)", "z"]):
+    for i, _ in byonic.groupby(["Peptide\n< ProteinMetrics Confidential >", "Glycans\nNHFAGNa", "Protein Name", "Starting\nposition", "Calc.\nmass (M+H)", "z"]):
         seq = Sequence(i[0])
         flank_removed = str(seq)[2:-2]
         stripped_seq = seq.to_stripped_string()[2:-2]

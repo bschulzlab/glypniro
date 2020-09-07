@@ -425,6 +425,7 @@ class GlypnirO:
                                                  condition_id=r["condition_id"], protein_name=u,
                                                  minimum_score=minimum_score, trust_byonic=self.trust_byonic, legacy=legacy)
                         if not comp.empty:
+
                             components.append({"filename": r["filename"], "area_filename": r["area_filename"], "condition_id": r["condition_id"], "replicate_id": r["replicate_id"], "Protein": u, "component": comp})
                 yield i, r
                 print(
