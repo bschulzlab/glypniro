@@ -1,15 +1,33 @@
+import argparse
 import pandas as pd
 from sequal.sequence import Sequence
 from sequal.resources import proton
 import os
+parser = argparse.ArgumentParser(description="Utility script for automated formatting and generation of GlypNirO input from Byonic and PeakView files.")
+parser.add_argument("-b",
+                    "-byonic",
+                    type=str,
+                    help="Filepath to Byonic output xlsx file."
+                         "replicate_id, filename, and area_filename", dest="b")
+parser.add_argument("-p",
+                    "-peakview",
+                    type=str,
+                    help="Filepath to PeakView ion outputin xlsx format", dest="p")
 
-byonic_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\Combined Output Urine.xlsx"
-peakview_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\SWATH_Urine_Combined_Byonic_PP_Export_MicroApp_6min_RT_cal_OUTPUT_Peptides_FDR_0.1.xlsx"
-dia_library_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\20190605_Combined_Byonic_Grape_Yeast_ProteinPilot_Pau4_2_No_LOC100247730_Added_KPYK2.txt"
+parser.add_argument("-o",
+                    "-output",
+                    type=str,
+                    help="Filepath to output", dest="o")
+#byonic_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\Yeast_Byonic.unique_EDK.xlsx"
+#peakview_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\20200904_Ed_beers_beerdb_SWATH+yeast+barley_glycans_IonLib_SWATH - Peptides_Recalc.xlsx"
+#dia_library_file = r"C:\Users\localadmin\PycharmProjects\glypniro2\20190605_Combined_Byonic_Grape_Yeast_ProteinPilot_Pau4_2_No_LOC100247730_Added_KPYK2.txt"
+#output = r"description_yeast.xlsx"
 
 if __name__ == "__main__":
-    byonic = pd.read_excel(byonic_file)
-    peakview = pd.read_excel(peakview_file)
+    args = parser.parse_args()
+
+    byonic = pd.read_excel(args.b)
+    peakview = pd.read_excel(args.p)
     result = []
     for i, _ in byonic.groupby(["Peptide\n< ProteinMetrics Confidential >", "Glycans\nNHFAGNa", "Protein Name", "Starting\nposition", "Calc.\nmass (M+H)", "z"]):
         seq = Sequence(i[0])
@@ -109,5 +127,5 @@ if __name__ == "__main__":
         area_df = pd.DataFrame(area, columns=["First Scan", "Area"])
         area_df.to_csv(filepath+".txt", sep="\t", index=False)
     description = pd.DataFrame(description, columns=["condition_id", "replicate_id", "filename", "area_filename"])
-    with pd.ExcelWriter("description.xlsx") as writer:
+    with pd.ExcelWriter(args.o) as writer:
         description.to_excel(writer, index=False)
