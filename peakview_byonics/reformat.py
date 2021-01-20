@@ -12,7 +12,7 @@ parser.add_argument("-b",
 parser.add_argument("-p",
                     "-peakview",
                     type=str,
-                    help="Filepath to PeakView ion outputin xlsx format", dest="p")
+                    help="Filepath to PeakView peptide output in xlsx format", dest="p")
 
 parser.add_argument("-o",
                     "-output",

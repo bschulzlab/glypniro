@@ -9,6 +9,7 @@ Pythons 3.4+ with the following packages installed.
 - requests
 - xlrd
 - openpyxl
+- scipy
 
 # Usage
 
@@ -50,7 +51,7 @@ The rows within the input file should not have to follow any particular order ho
 - `filename` filepath to the Byonic .xlsx output file of the experiment.
 - `area_filename` filepath to the PD tabulated output file of the experiment.
 
-# Output
+# Output for default execution mode
 
 The output of the script is a single .xlsx file with 4 sheets. 
 - The first one is the output where we calculate the proportion by combining both the glycosylated and unglycosylated glycoform data.
@@ -70,3 +71,12 @@ Inclusion of `-g` would instruct the script to connect to the UniProt online dat
 
 The above command would instruct the script to use the `test_experiment.xlsx` file as input file and output as `test_output.xlsx`.
 Without `-t` optional parameter, we only use the information of what glycans were found but not assigning them any positions. The AUC will only be combined for those PSMs with the same peptide sequence and glycan combination.
+
+# Note for using with PeakView SWATH data
+
+The script `reformat.py` included under the `peakview_byonics` folder within GlypNirO should be used to generate appropriate input for GlypNirO from SWATH and Byonic data.
+
+`python reformat.py -b byonic.xlsx -p peakview_peptide.xlsx -o description_peakview.xlsx`
+
+The command above will generate input files from experiment information and peptides information from GlypNirO and SWATH and create a description file that can be directly input into the main GlypNirO script.
+For optimal result, the SWATH library used for the PeakView should be constructed from Byonic identification data.
