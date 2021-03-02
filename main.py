@@ -58,7 +58,7 @@ if __name__ == "__main__":
     ex = GlypnirO(trust_byonic=args.trust_byonic, get_uniprot=args.get_uniprot, debug=args.debug,
                   parse_uniprot=args.parse_uniprot)
     if args.m == 1:
-        for i, r in ex.add_batch_component(args.i, args.score_cutoff):
+        for i, r in ex.add_batch_component(args.i, args.s):
             print(r)
         ex.process_components()
         result = ex.analyze_components()
@@ -78,7 +78,7 @@ if __name__ == "__main__":
                     df = pd.DataFrame(ex.unique_dict[u])
                     df.to_excel(writer, index=False)
     elif args.m == 2:
-        data = pd.read_csv(args.i, sep="\t", encoding="utf-16")
+        data = pd.read_csv(args.i, sep="\t", encoding="utf-8")
         data, sample_info = process_tmt_pd_byonic(data)
 
         ex.uniprot_parsed_data = data[["Master Protein Accessions", "Protein Descriptions"]].rename(columns={"Master Protein Accessions": "Entry", "Protein Descriptions": "Protein names"})

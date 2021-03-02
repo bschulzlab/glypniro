@@ -81,6 +81,7 @@ class Result:
         self.df = df
         self.empty = df.empty
 
+
     def separate_result(self):
         normal_header = []
         df = self.df
@@ -154,13 +155,14 @@ class Result:
             df = df[df["Glycans"] != "U"]
         if trust_byonic:
             temp = df.set_index(grouping_position)
+
         else:
             temp = df.set_index(grouping_peptides)
         if "Value" in temp.columns:
-            temp = temp.rename(columns={"Value": name}, inplace=True)
+            temp.rename(columns={"Value": name}, inplace=True)
         else:
             temp = temp.rename(columns={k: name for k in temp.columns if k not in {"Protein", "Peptides", "Position", "Glycans"}})
-
+        #print(temp)
         return temp
 
 # Object containing each individual protein. much of the methods involved in the analysis is contained within this object
@@ -189,6 +191,12 @@ class GlypnirOComponent:
                 data = pd.read_csv(filename, sep="\t")
 
         if mode == 1:
+            self.protein_column = protein_column_name
+            self.sequence_column = sequence_column_name
+            self.glycans_column = glycans_column_name
+            self.starting_position_column = starting_position_column_name
+            self.modifications_column = modifications_column
+            self.observed_mz_column = observed_mz_column_name
             if area_filename is not None:
                 if type(area_filename) == pd.DataFrame:
                     file_with_area = area_filename
@@ -447,7 +455,8 @@ class GlypnirOComponent:
 
         # cells in glycan column with no glycan will be assigned a string "None"
         temp[glycans_column] = temp[glycans_column].fillna("None")
-        temp["glycoprofile"] = temp["glycoprofile"].fillna("U")
+        if "glycoprofile" in temp.columns:
+            temp["glycoprofile"] = temp["glycoprofile"].fillna("U")
 
         out = []
 
@@ -476,16 +485,29 @@ class GlypnirOComponent:
 
                     max_area_row = g["score_rank"].idxmax()
                 unique_row = g.loc[max_area_row]
+                #print(unique_row)
+                #print(seq_glycosites, i)
+                if mode == 1:
+                    for n in seq_glycosites:
+                        #print(n, unique_row[starting_position_column], unique_row["Ending Position"])
+                        # create a list of n glycosylation sites that can be found within the peptide sequence
+                        if unique_row[starting_position_column] <= n < unique_row["Ending Position"]:
+                            # print(unique_row["stripped_seq"], n, unique_row[starting_position_column_name])
 
-                if i[0] in seq_glycosites:
-                    if seq_glycosites[i[0]]:
-                        for n in seq_glycosites[i[0]]:
-                            # create a list of n glycosylation sites that can be found within the peptide sequence
-                            if unique_row[starting_position_column] <= n < unique_row["Ending Position"]:
-                                # print(unique_row["stripped_seq"], n, unique_row[starting_position_column_name])
+                            seq_within.append(
+                                unique_row["stripped_seq"][
+                                    int(n - unique_row[starting_position_column])].upper() + str(n))
+                if mode == 2:
+                    if i[0] in seq_glycosites:
+                        if seq_glycosites[i[0]]:
+                            for n in seq_glycosites[i[0]]:
+                                #print(n, unique_row[starting_position_column], unique_row["Ending Position"])
+                                # create a list of n glycosylation sites that can be found within the peptide sequence
+                                if unique_row[starting_position_column] <= n < unique_row["Ending Position"]:
+                                    # print(unique_row["stripped_seq"], n, unique_row[starting_position_column_name])
 
-                                seq_within.append(
-                                    unique_row["stripped_seq"][int(n - unique_row[starting_position_column])].upper() + str(n))
+                                    seq_within.append(
+                                        unique_row["stripped_seq"][int(n - unique_row[starting_position_column])].upper() + str(n))
 
                 glycosylation_count = 0
                 glycans = []
@@ -499,7 +521,8 @@ class GlypnirOComponent:
                     if unique_row.index[c].endswith("_position"):
                         if pd.notnull(unique_row[unique_row.index[c]]):
                             pos = unique_row[unique_row.index[c]]
-                            print(pos)
+                            #print(pos)
+                            #print(seq_within)
                             if glycans:
                                 if mode == 1:
                                     result.append({"Position": pos, "Glycans": glycans[glycosylation_count], "Value": unique_row["Area"]})
@@ -531,6 +554,7 @@ class GlypnirOComponent:
                     group = result.groupby(["Protein", "Position", "Glycans"])
 
                 out = group.agg(np.sum).reset_index()
+
             else:
                 if mode == 1:
                     out = pd.DataFrame([], columns=["Position", "Glycans", "Values"])
@@ -582,7 +606,7 @@ class GlypnirOComponent:
                 group = result.groupby(["Protein", "Peptides", "Position", "Glycans"])
 
             out = group.agg(np.sum, axis=0).reset_index()
-            # print(out)
+        #print(out)
         return Result(out)
 
 
@@ -712,7 +736,7 @@ class GlypnirO:
                 self.unique_dict[unique_name] = []
 
             analysis_result = r["component"].analyze(debug=self.debug)
-
+            #print(analysis_result.df)
             self.format_result(analysis_result, r, result, result_occupancy_no_calculation_u, result_without_u,
                                unique_name)
 
@@ -764,6 +788,8 @@ class GlypnirO:
             a = analysis_result.to_summary(name="Raw", trust_byonic=self.trust_byonic)
 
             pro = analysis_result.calculate_proportion()
+            #print(a)
+
             b = analysis_result.to_summary(pro, "Proportion", trust_byonic=self.trust_byonic)
             temp_df = self._summary(a, b, r)
             # print(temp_df)
@@ -782,7 +808,7 @@ class GlypnirO:
 
     # summarize the data and collect uniprot protein directly fromt the online uniprot database if get_uniprot is True
     def _summary_format(self, result, filter_method=filter_U_only, select_for_u=False):
-        print(result)
+        #print(result)
         result_data = pd.concat(result)
         result_data = result_data.reset_index(drop=True)
         accessions = result_data["Protein"].unique()
