@@ -745,30 +745,46 @@ class GlypnirO:
         result_glycoform = self._summary_format(result_without_u)
 
         tempdf_index_reset_result_occupancy_with_u = result_occupancy_with_u.reset_index()
+
         tempdf_index_reset_result_glycoform = result_glycoform.reset_index()
         result_occupancy_glycoform_sep = pd.concat(
             [tempdf_index_reset_result_glycoform, tempdf_index_reset_result_occupancy_with_u])
         # format the output with the correct column name for site specific or peptide level analysis
         if self.trust_byonic:
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(["Protein", "Protein names",
+            if relabel:
+                grouping_array = ["Protein", "Protein names",
                                                                                        # "Isoform",
-                                                                                       "Glycosylated positions in peptide", "Glycans"])
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(
-                level=["Protein", "Protein names",
+                                                                                       "Glycosylated positions in peptide", "Labels", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
                        # "Isoform",
-                       "Glycosylated positions in peptide"])
+                       "Glycosylated positions in peptide", "Labels"]
+            else:
+                grouping_array = ["Protein", "Protein names",
+                                  # "Isoform",
+                                  "Glycosylated positions in peptide", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                                 # "Isoform",
+                                 "Glycosylated positions in peptide"]
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(grouping_array)
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(
+                level=sorting_array)
         else:
-
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(
-                ["Protein", "Protein names",
+            if relabel:
+                grouping_array = ["Protein", "Protein names",
                  # "Isoform",
-                 "Position peptide N-terminus", "Peptides", "Glycans"])
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(
-                level=["Protein", "Protein names",
+                 "Position peptide N-terminus", "Peptides", "Labels", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
                        # "Isoform",
-                       "Position peptide N-terminus", "Peptides"])
-
-
+                       "Position peptide N-terminus", "Peptides", "Labels"]
+            else:
+                grouping_array = ["Protein", "Protein names",
+                 # "Isoform",
+                 "Position peptide N-terminus", "Peptides", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                       # "Isoform",
+                       "Position peptide N-terminus", "Peptides"]
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(grouping_array)
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(level=sorting_array)
         print("Finished analysis.")
         return {"Glycoforms":
                     result_glycoform,
@@ -807,7 +823,7 @@ class GlypnirO:
             result_occupancy_no_calculation_u.append(temp_df_no_calculation_u)
 
     # summarize the data and collect uniprot protein directly fromt the online uniprot database if get_uniprot is True
-    def _summary_format(self, result, filter_method=filter_U_only, select_for_u=False):
+    def _summary_format(self, result, filter_method=filter_U_only, select_for_u=False, relabeling=""):
         #print(result)
         result_data = pd.concat(result)
         result_data = result_data.reset_index(drop=True)
@@ -848,27 +864,52 @@ class GlypnirO:
         result_data = groups.filter(filter_method)
         if select_for_u:
             result_data = result_data[result_data["Glycans"] == "U"]
+        if relabeling:
+            result_data = add_custom_glycan_categories(relabeling, result_data)
+
         if self.trust_byonic:
             result_data = result_data.rename({"Position": "Glycosylated positions in peptide"}, axis="columns")
-            result_data = result_data.set_index(
-                ["Label", "condition_id", "replicate_id", "Protein", "Protein names",
-                 # "Isoform",
-                 "Glycosylated positions in peptide", "Glycans"])
+            if relabeling:
+                result_data = result_data.set_index(
+                    ["Label", "condition_id", "replicate_id", "Protein", "Protein names",
+                     # "Isoform",
+                     "Glycosylated positions in peptide", "Categories", "Glycans"])
+            else:
+                result_data = result_data.set_index(
+                    ["Label", "condition_id", "replicate_id", "Protein", "Protein names",
+                     # "Isoform",
+                     "Glycosylated positions in peptide", "Glycans"])
         else:
             result_data = result_data.rename({"Position": "Position peptide N-terminus"}, axis="columns")
-            result_data = result_data.set_index(
-                ["Label", "condition_id", "replicate_id", "Protein", "Protein names",
-                 # "Isoform",
-                 "Position peptide N-terminus", "Peptides", "Glycans"])
+            if relabeling:
+                result_data = result_data.set_index(
+                    ["Label", "condition_id", "replicate_id", "Protein", "Protein names",
+                     # "Isoform",
+                     "Position peptide N-terminus", "Peptides", "Categories", "Glycans"])
+            else:
+                result_data = result_data.set_index(
+                    ["Label", "condition_id", "replicate_id", "Protein", "Protein names",
+                     # "Isoform",
+                     "Position peptide N-terminus", "Peptides", "Glycans"])
         result_data = result_data.unstack(["Label", "condition_id", "replicate_id"])
         result_data = result_data.sort_index(level=["Label", "condition_id", "replicate_id"], axis=1)
         #result_data.to_csv("test.txt", sep="\t")
         if self.trust_byonic:
-            result_data = result_data.sort_index(level=["Protein", "Protein names",
+            if relabeling:
+                result_data = result_data.sort_index(level=["Protein", "Protein names",
                                                         # "Isoform",
-                                                        "Glycosylated positions in peptide"])
+                                                        "Glycosylated positions in peptide", "Categories"])
+            else:
+                result_data = result_data.sort_index(level=["Protein", "Protein names",
+                                                            # "Isoform",
+                                                            "Glycosylated positions in peptide"])
         else:
-            result_data = result_data.sort_index(level=["Protein", "Protein names",
+            if relabeling:
+                result_data = result_data.sort_index(level=["Protein", "Protein names",
+                                                            # "Isoform",
+                                                            "Position peptide N-terminus", "Peptides", "Categories"])
+            else:
+                result_data = result_data.sort_index(level=["Protein", "Protein names",
                                                         # "Isoform",
                                                         "Position peptide N-terminus", "Peptides"])
 
@@ -911,3 +952,10 @@ def process_tmt_pd_byonic(df):
                 samples[s.group(2)] = set()
             samples[s.group(2)].add(s.group(1))
     return df, samples
+
+
+def add_custom_glycan_categories(custom_name_file, dataframe):
+    custom_name = pd.read_csv(custom_name_file, sep="\t")
+    results = dataframe.merge(custom_name, how="left", on="Glycans")
+    results["Categories"] = results["Categories"].fillna("Unclassified")
+    return results

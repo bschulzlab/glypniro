@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
-from glypnirO.common import GlypnirO, process_tmt_pd_byonic, GlypnirOComponent, filter_with_U
+from glypnirO.common import GlypnirO, process_tmt_pd_byonic, GlypnirOComponent, filter_with_U, \
+    add_custom_glycan_categories
 
 parser = argparse.ArgumentParser(description="Automated workflow for processing and combining Byonic and PD output")
 
@@ -49,6 +50,12 @@ parser.add_argument("-m",
                          "2 - pd + byonic tmt",
                     default=1,
                     dest="m")
+
+parser.add_argument("-c",
+                    "--custom_group",
+                    type=str,
+                    help="A tabulated text file with two columns, Glycans and Labels. Glycans must be the glycans appear in the result and labels is the custome label for them",
+                    dest="c", default="")
 
 if __name__ == "__main__":
 
@@ -119,34 +126,58 @@ if __name__ == "__main__":
                 temp_df_no_calculation_u = ex._summary(a, b_without_u, add_protein=False, condition=condition, replicate=s.df.columns[-1])
                 output_occupancy_no_calculation_u.append(temp_df_no_calculation_u)
 
-        result_occupancy = ex._summary_format(output1)
-        result_occupancy_with_u = ex._summary_format(output1, filter_with_U, True)
-        result_glycoform = ex._summary_format(output_without_u)
+        result_occupancy = ex._summary_format(output1, relabeling=args.c)
+        result_occupancy_with_u = ex._summary_format(output1, filter_with_U, True, relabeling=args.c)
+        result_glycoform = ex._summary_format(output_without_u, relabeling=args.c)
         tempdf_index_reset_result_occupancy_with_u = result_occupancy_with_u.reset_index()
         tempdf_index_reset_result_glycoform = result_glycoform.reset_index()
+        print(tempdf_index_reset_result_glycoform)
+
         result_occupancy_glycoform_sep = pd.concat(
             [tempdf_index_reset_result_glycoform, tempdf_index_reset_result_occupancy_with_u])
         # format the output with the correct column name for site specific or peptide level analysis
         if args.trust_byonic:
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(["Protein", "Protein names",
+            if args.c:
+                grouping_array = ["Protein", "Protein names",
+                                                                                       # "Isoform",
+                                                                                       "Glycosylated positions in "
+                                                                                       "peptide", "Categories",
+                                                                                       "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                       # "Isoform",
+                       "Glycosylated positions in peptide", "Categories"]
+            else:
+                grouping_array = ["Protein", "Protein names",
                                                                                        # "Isoform",
                                                                                        "Glycosylated positions in "
                                                                                        "peptide",
-                                                                                       "Glycans"])
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(
-                level=["Protein", "Protein names",
+                                                                                       "Glycans"]
+                sorting_array = ["Protein", "Protein names",
                        # "Isoform",
-                       "Glycosylated positions in peptide"])
+                       "Glycosylated positions in peptide"]
+            print(result_occupancy_glycoform_sep)
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(grouping_array)
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(
+                level=sorting_array)
         else:
-
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(
-                ["Protein", "Protein names",
+            if args.c:
+                grouping_array = ["Protein", "Protein names",
                  # "Isoform",
-                 "Position peptide N-terminus", "Peptides", "Glycans"])
-            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(
-                level=["Protein", "Protein names",
+                 "Position peptide N-terminus", "Peptides", "Labels", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
                        # "Isoform",
-                       "Position peptide N-terminus", "Peptides"])
+                       "Position peptide N-terminus", "Peptides", "Labels"]
+            else:
+                grouping_array = ["Protein", "Protein names",
+                 # "Isoform",
+                 "Position peptide N-terminus", "Peptides", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                       # "Isoform",
+                       "Position peptide N-terminus", "Peptides"]
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.set_index(
+                grouping_array)
+            result_occupancy_glycoform_sep = result_occupancy_glycoform_sep.sort_index(
+                level=sorting_array)
         with pd.ExcelWriter(args.o) as writer:
             print("Writing Occupancy data to excel sheets.")
             if not result_occupancy.empty:
