@@ -188,5 +188,17 @@ if __name__ == "__main__":
                 result_occupancy_with_u.to_excel(writer, sheet_name="Unglycosylated")
             if not result_glycoform.empty:
                 result_glycoform.to_excel(writer, sheet_name="Glycoforms")
+        if args.c:
+            with pd.ExcelWriter(args.o + "glycan_grouped.xlsx") as writer:
+                if not result_occupancy.empty:
+                    result_occupancy.groupby(grouping_array[:-1]).sum().to_excel(writer, sheet_name="Unglyco_and_Glycoforms_Prop")
+                if not result_occupancy_glycoform_sep.empty:
+                    result_occupancy_glycoform_sep.groupby(grouping_array[:-1]).sum().to_excel(writer, sheet_name="Unglyco_and_Glycoforms_Sep")
+                if not result_occupancy_with_u.empty:
+                    result_occupancy_with_u.groupby(grouping_array[:-1]).sum().to_excel(writer, sheet_name="Unglycosylated")
+                if not result_glycoform.empty:
+                    result_glycoform.groupby(grouping_array[:-1]).sum().to_excel(writer, sheet_name="Glycoforms")
+
+
     print("Completed.")
 
