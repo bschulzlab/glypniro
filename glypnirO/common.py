@@ -723,7 +723,7 @@ class GlypnirO:
 
 
     # analysis of the compiled data
-    def analyze_components(self):
+    def analyze_components(self, relabel):
 
         result = []
         result_without_u = []
@@ -740,9 +740,9 @@ class GlypnirO:
             self.format_result(analysis_result, r, result, result_occupancy_no_calculation_u, result_without_u,
                                unique_name)
 
-        result_occupancy = self._summary_format(result)
-        result_occupancy_with_u = self._summary_format(result, filter_with_U, True)
-        result_glycoform = self._summary_format(result_without_u)
+        result_occupancy = self._summary_format(result, relabeling=relabel)
+        result_occupancy_with_u = self._summary_format(result, filter_with_U, True, relabeling=relabel)
+        result_glycoform = self._summary_format(result_without_u, relabeling=relabel)
 
         tempdf_index_reset_result_occupancy_with_u = result_occupancy_with_u.reset_index()
 

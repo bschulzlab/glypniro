@@ -68,7 +68,41 @@ if __name__ == "__main__":
         for i, r in ex.add_batch_component(args.i, args.s):
             print(r)
         ex.process_components()
-        result = ex.analyze_components()
+        result = ex.analyze_components(relabel=args.c)
+        if args.trust_byonic:
+            if args.c:
+                grouping_array = ["Protein", "Protein names",
+                                                                                       # "Isoform",
+                                                                                       "Glycosylated positions in "
+                                                                                       "peptide", "Categories",
+                                                                                       "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                       # "Isoform",
+                       "Glycosylated positions in peptide", "Categories"]
+            else:
+                grouping_array = ["Protein", "Protein names",
+                                                                                       # "Isoform",
+                                                                                       "Glycosylated positions in "
+                                                                                       "peptide",
+                                                                                       "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                       # "Isoform",
+                       "Glycosylated positions in peptide"]
+        else:
+            if args.c:
+                grouping_array = ["Protein", "Protein names",
+                 # "Isoform",
+                 "Position peptide N-terminus", "Peptides", "Labels", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                       # "Isoform",
+                       "Position peptide N-terminus", "Peptides", "Labels"]
+            else:
+                grouping_array = ["Protein", "Protein names",
+                 # "Isoform",
+                 "Position peptide N-terminus", "Peptides", "Glycans"]
+                sorting_array = ["Protein", "Protein names",
+                       # "Isoform",
+                       "Position peptide N-terminus", "Peptides"]
         with pd.ExcelWriter(args.o) as writer:
             print("Writing Occupancy data to excel sheets.")
             if not result["Occupancy"].empty:
@@ -79,6 +113,20 @@ if __name__ == "__main__":
                 result["Occupancy_With_U"].to_excel(writer, sheet_name="Unglycosylated")
             if not result["Glycoforms"].empty:
                 result["Glycoforms"].to_excel(writer, sheet_name="Glycoforms")
+        if args.c:
+            with pd.ExcelWriter(args.o + "glycan_grouped.xlsx") as writer:
+                if not result["Occupancy"].empty:
+                    result["Occupancy"].groupby(grouping_array[:-1]).sum().to_excel(writer,
+                                                                                 sheet_name="Unglyco_and_Glycoforms_Prop")
+                if not result["Occupancy_Without_Proportion_U"].empty:
+                    result["Occupancy_Without_Proportion_U"].groupby(grouping_array[:-1]).sum().to_excel(writer,
+                                                                                               sheet_name="Unglyco_and_Glycoforms_Sep")
+                if not result["Occupancy_With_U"].empty:
+                    result["Occupancy_With_U"].groupby(grouping_array[:-1]).sum().to_excel(writer,
+                                                                                        sheet_name="Unglycosylated")
+                if not result["Glycoforms"].empty:
+                    result["Glycoforms"].groupby(grouping_array[:-1]).sum().to_excel(writer, sheet_name="Glycoforms")
+
         if ex.debug:
             for u in ex.unique_dict:
                 with pd.ExcelWriter(args.o + "_" + u + ".xlsx") as writer:

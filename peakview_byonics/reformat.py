@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 from sequal.sequence import Sequence
 from sequal.resources import proton
+import pathlib
 import os
 parser = argparse.ArgumentParser(description="Utility script for automated formatting and generation of GlypNirO input from Byonic and PeakView files.")
 parser.add_argument("-b",
@@ -13,7 +14,6 @@ parser.add_argument("-p",
                     "-peakview",
                     type=str,
                     help="Filepath to PeakView peptide output in xlsx format", dest="p")
-
 parser.add_argument("-o",
                     "-output",
                     type=str,
@@ -25,7 +25,7 @@ parser.add_argument("-o",
 
 if __name__ == "__main__":
     args = parser.parse_args()
-
+    pathlib.Path(args.o).mkdir(parents=True, exist_ok=True)
     byonic = pd.read_excel(args.b)
     peakview = pd.read_excel(args.p)
     result = []
@@ -45,8 +45,10 @@ if __name__ == "__main__":
         area = []
         byonic_glycan = []
         condition, replicate = c.rsplit("_", 1)
-        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), c)
-        description.append([condition, replicate, filepath+".xlsx", filepath+".txt"])
+        filepath = str(pathlib.Path(args.o).joinpath(c))
+        byonic= str(pathlib.Path(args.o).joinpath(c+".xlsx"))
+        pd_file = str(pathlib.Path(args.o).joinpath(c+".txt"))
+        description.append([condition, replicate, byonic, pd_file])
         columns = list(peakview.columns[:5]) + [c]
         df_result = peakview[columns]
 
@@ -122,10 +124,10 @@ if __name__ == "__main__":
             byonic_glycan.append([data["Protein Name"], data["Glycans\nNHFAGNa"], data["Peptide"], 1, "scan={}".format(str(scan)), data["Starting\nposition"], data["Calc.\nmass (M+H)"]])
             area.append([scan, r[c]])
         byonic_df = pd.DataFrame(byonic_glycan, columns=["Protein Name", "Glycans\nNHFAGNa", "Peptide\n< ProteinMetrics Confidential >", "Score", "Scan #", "Starting\nposition", "Calc.\nmass (M+H)"])
-        with pd.ExcelWriter(filepath+".xlsx") as writer:
+        with pd.ExcelWriter(byonic) as writer:
             byonic_df.to_excel(writer, sheet_name="Spectra", index=False)
         area_df = pd.DataFrame(area, columns=["First Scan", "Area"])
-        area_df.to_csv(filepath+".txt", sep="\t", index=False)
+        area_df.to_csv(pd_file, sep="\t", index=False)
     description = pd.DataFrame(description, columns=["condition_id", "replicate_id", "filename", "area_filename"])
     with pd.ExcelWriter(args.o) as writer:
         description.to_excel(writer, index=False)
