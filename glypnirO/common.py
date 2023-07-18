@@ -207,7 +207,7 @@ class GlypnirOComponent:
                         file_with_area = pd.read_csv(area_filename, sep="\t")
 
                 # Joining of area and glycan data for each PSM using scan number as merging point
-                data["Scan number"] = pd.to_numeric(data["Scan #"].str.extract("scan=(\d+)", expand=False))
+                data["Scan number"] = pd.to_numeric(data["Scan #"].str.extract("id=(\d+)", expand=False))
                 data = pd.merge(data, file_with_area, left_on="Scan number", right_on="First Scan")
 
                 # Subset and filtering data for those with non blank area value and passing minimum score cutoff
