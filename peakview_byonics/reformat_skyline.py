@@ -7,7 +7,7 @@ import pathlib
 
 glycan_column = "Glycans\nNHFAGNa"
 peptide_column = "Peptide\n< ProteinMetrics Confidential >"
-scan_number_regex = re.compile("scan=(\d+)")
+scan_number_regex = re.compile("id=(\d+)")
 
 parser = argparse.ArgumentParser(description="Utility script for automated formatting and generation of GlypNirO input from a specific Skyline output.")
 parser.add_argument("-b",
@@ -40,6 +40,7 @@ if __name__ == "__main__":
     df = df.merge(byonic, on=peptide_column)
     current_condition = ""
     current_replicate = ""
+    #df["Replicate"] = df["Replicate"].astype(str)
     matches = df["Replicate"].str.extractall(replicate_regex).reset_index()
     #scan_number = df["Scan #"].str.extractall(scan_number_regex).reset_index()
     df["Condition id"] = matches[0]
