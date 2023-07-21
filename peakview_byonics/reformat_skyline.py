@@ -55,7 +55,7 @@ if __name__ == "__main__":
         scan_byonic = []
         for i in range(d.shape[0]):
             scan_pd.append(str(i))
-            scan_byonic.append("scan="+str(i))
+            scan_byonic.append("id="+str(i))
         with pd.ExcelWriter(byonic_file) as writer:
             d["Scan #"] = pd.Series(scan_byonic, index=d.index)
             d["First Scan"] = pd.Series(scan_pd, index=d.index)
